@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Models / engines (large, hardware-specific — build locally per configs)
+models/*.engine
+models/*.onnx
+models/*.pt
+models/*.bin
+
+# Local overrides
+configs/local.yaml
+*.log

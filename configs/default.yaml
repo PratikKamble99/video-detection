@@ -1,0 +1,72 @@
+# Default configuration (ARCHITECTURE.md §13).
+# Every model name is a *category*, not a recommendation — verify current
+# versions and benchmark on your own hardware before committing (plan.md).
+
+video:
+  source: 0                # camera index, or path / RTSP URL
+  size: [640, 640]
+  ring_slots: 12           # >= 3 x (max consumer latency / frame period)
+  detector:
+    engine: models/yolov11s_fp16.engine
+    conf: 0.35
+    open_vocab: false
+    classes: null          # set a list to enable YOLO-World prompts
+  tracker:
+    type: bytetrack
+    track_buffer: 30
+  embed:
+    model: siglip-base
+    every_n_frames: 3
+
+audio:
+  sample_rate: 16000
+  block_ms: 32
+  vad:
+    model: silero
+    threshold: 0.5
+    min_silence_ms: 400
+  asr:
+    model: distil-large-v3
+    compute_type: int8
+    window_s: 1.0
+    overlap_s: 0.3
+  tagging:
+    model: beats
+    window_s: 1.0
+    threshold: 0.3
+  captioning:
+    enabled: true
+    window_s: 2.0
+
+fusion:
+  vision_buffer_s: 2.0     # MUST exceed ASR lag, or late audio finds no partners
+  scene_graph:
+    near_thresh_norm: 0.15
+  memory:
+    backend: faiss
+    dim: 768
+    snapshot_on_salience: true
+
+salience:
+  threshold: 1.2
+  heartbeat_s: 20.0
+  weights:
+    new_track: 0.5
+    new_class: 1.0
+    visual: 2.0
+    audio: 1.5
+    kinematic: 0.8
+
+reasoning:
+  provider: anthropic      # or local: qwen2-vl-7b
+  max_concurrent: 2
+  token_budget_per_min: 8000
+  abstain_below_confidence: 0.55
+  tools: [query_memory, zoom_crop, replay_audio, get_track_history, defer]
+
+observability:
+  prometheus_port: 9108
+
+bus:
+  endpoint: tcp://127.0.0.1:5599
+  hwm: 1000
